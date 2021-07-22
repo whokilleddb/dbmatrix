@@ -4,15 +4,14 @@
 #include <unistd.h>
 #include <curses.h>
 #include <stdbool.h>
-#include "ui.h"
-#include "matrix.h"
 
-#define ITERATIONS 500
-#define REFRESH_DELAY 50000L
-
+#include "dbmatrix.h"
 
 int main(int argc,char *argv[])
 {
+    setup_global();
+    show_info();
+
     //Initialize Curses
     if(!init_ui())
     {
@@ -21,14 +20,20 @@ int main(int argc,char *argv[])
 
     //Set Up Basic Data Model
     matrix_init(); 
-
-    for(int i=0; i < ITERATIONS; i++)
+    if (ITERATIONS<=0)
     {
-        matrix_update();
-        show_matrix();
-        usleep(REFRESH_DELAY);
+        while(true)
+        {
+            play_animation();
+        }
     }
-
+    else 
+    {
+        for(int i=0; i < ITERATIONS; i++)
+        {
+            play_animation();
+        }
+    }
     cleanup_ui();
     return EXIT_SUCCESS;
 }
