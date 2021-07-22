@@ -193,7 +193,7 @@ static inline void setup_global()
         wbkgd(stdscr, COLOR_PAIR(1));
         if (!has_colors() || !can_change_color() || COLOR_PAIRS < 6)
         {
-            perror("[-] " RED("Your Terminal Cannot Run This Program!\n"));
+            fprintf(stderr,"[-] " RED("Your Terminal Cannot Run This Program!\n"));
             return false;
         }
 
