@@ -4,11 +4,12 @@
 #include <unistd.h>
 #include <curses.h>
 #include <stdbool.h>
-
+#include <signal.h>
 #include "dbmatrix.h"
 
 int main(int argc,char *argv[])
 {
+    signal(SIGINT, exit_gracefully);
     setup_global();
     show_info();
 

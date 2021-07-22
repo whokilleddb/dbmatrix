@@ -7,6 +7,7 @@
 #include <math.h>
 #include <unistd.h>
 #include <string.h>
+#include  <signal.h>
 
 // Colors
 #define RED(string)     "\x1b[31m" string "\x1b[0m"
@@ -17,8 +18,8 @@
 #define CYAN(string)    "\x1b[36m" string "\x1b[0m"
 
 //Macros
-#define ITERATIONS 100         //controls for how long the program will run(Infinietly if <=0)
-#define REFRESH_DELAY 5000L  //controls speed 
+#define ITERATIONS 200         //controls for how long the program will run(Infinietly if <=0)
+#define REFRESH_DELAY 50000L  //controls speed 
 #define MAX_INTENSITY 13     
 #define MIN_INTENSITY 2
 #define BRIGHTNESS 6
@@ -51,11 +52,22 @@ cell **matrix;
 drip drips[DRIP_NUM];
 
 //Prototypes
-static inline bool init_ui();
-static inline void cleanup_ui();
-static inline void show_matrix();
+static inline double rand01();
+static inline void get_dimensions();
+static inline void show_info();
+static inline void play_animation();
+static inline void fill_color();
+static inline void setup_global();
+static inline void set_colors();
+static inline bool init_ui(void);
+static inline void show_matrix(void);
+static inline void try_add_drips();
+static inline  void update_drips();
+static inline  void init_drips();
 static inline void matrix_init();
+static inline  void fade_n_change_matrix(void);
 static inline void matrix_update();
+static inline void exit_gracefully(int);
 
 //Functions
 static inline double rand01()
@@ -92,6 +104,12 @@ static inline void show_info()
     fprintf(stdout,"[+] PROB_DIM: " BLUE("%f")"\n", PROB_DIM);
     fprintf(stdout,"[+] PROB_CHANGE: " MAGENTA("%f")"\n", PROB_CHANGE);
     fprintf(stdout,"[+] DDRIP_NUM: " GREEN("%d")"\n", DRIP_NUM);
+    fprintf(stdout,"[+] COLOR_MAP: ");
+    for(int i=0;i<=MAX_INTENSITY;i++)
+    {
+        fprintf(stdout, CYAN("%d") " ", color_map[i]);
+    }
+    fprintf(stdout,"\n");
 }
 
 static inline void play_animation()
@@ -157,7 +175,7 @@ static inline void set_colors()
         start_color();
         if (!has_colors() || !can_change_color() || COLOR_PAIRS < 6)
         {
-            perror("[!] " RED("Your Terminal Cannot Run This Program!\n"));
+            perror("[-] " RED("Your Terminal Cannot Run This Program!\n"));
             return false;
         }
 
@@ -189,97 +207,108 @@ static inline void set_colors()
 
 #endif
 
+#ifndef _MATRIX_H_
+#define _MATRIX_H_
 
-static inline void try_add_drips()
-{
-    for(int i=0; i<DRIP_NUM; i++)
+    static inline void try_add_drips()
     {
-        if (drips[i].live == false)
+        for(int i=0; i<DRIP_NUM; i++)
         {
-            drips[i].live=true;
-            drips[i].x = rand() % MAX_X;
-            drips[i].y =0; //rand() % MAX_Y
-            drips[i].bright=rand()%2;
-            return;
-        }
-    }
-}
-
-static inline  void update_drips()
-{
-    for (int i=0; i<DRIP_NUM; i++)
-    {
-        if(drips[i].live)
-        {
-            if(drips[i].bright)
+            if (drips[i].live == false)
             {
-                matrix[drips[i].x][drips[i].y].intensity=MAX_INTENSITY;
-            }
-            else
-            {
-                matrix[drips[i].x][drips[i].y].intensity=MIN_INTENSITY;
-            }
-            //drips die when they leave screen
-            if(++drips[i].y >=MAX_Y-1)
-            {
-                drips[i].live=false;
+                drips[i].live=true;
+                drips[i].x = rand() % MAX_X;
+                drips[i].y =0; //rand() % MAX_Y
+                drips[i].bright=rand()%2;
+                return;
             }
         }
     }
-}
 
-static inline  void init_drips()
-{
-    int i;
-    for(i=0;i<DRIP_NUM;i++)
+    static inline  void update_drips()
     {
-        drips[i].live=false;
-    }
-}
-
-static inline void matrix_init()
-{
-    //set the matrix to all black
-    for (int X=0; X < MAX_X; X++)
-    {
-        for (int Y=0; Y < MAX_Y; Y++)
-        {  
-            matrix[X][Y].char_value=0;
-            matrix[X][Y].intensity=0;
-        }
-    }
-    init_drips();
-}
-
-static inline  void fade_n_change_matrix(void)
-{
-    for (int X=0; X < MAX_X; X++)
-    {
-        for (int Y=0; Y < MAX_Y; Y++)
+        for (int i=0; i<DRIP_NUM; i++)
         {
-            //Randomly change characters
-            if (rand01() < PROB_CHANGE || matrix[X][Y].char_value == 0)
+            if(drips[i].live)
             {
-                matrix[X][Y].char_value = RANDOM_PRINTABLE_CHARACTER;
-            }
-            //Randomly dim the cells
-            if(rand01() < PROB_DIM)
-            {
-                if (matrix[X][Y].intensity > 0)
+                if(drips[i].bright)
                 {
-                    matrix[X][Y].intensity--;
-                }    
-            }            
+                    matrix[drips[i].x][drips[i].y].intensity=MAX_INTENSITY;
+                }
+                else
+                {
+                    matrix[drips[i].x][drips[i].y].intensity=MIN_INTENSITY;
+                }
+                //drips die when they leave screen
+                if(++drips[i].y >=MAX_Y-1)
+                {
+                    drips[i].live=false;
+                }
+            }
         }
-    }    
-}
-
-static inline void matrix_update()
-{
-    if (rand01() < PROB_DRIP_SPAWN)
-    {
-        try_add_drips();
     }
-    update_drips();
-    fade_n_change_matrix();
+
+    static inline  void init_drips()
+    {
+        int i;
+        for(i=0;i<DRIP_NUM;i++)
+        {
+            drips[i].live=false;
+        }
+    }
+
+    static inline void matrix_init()
+    {
+        //set the matrix to all black
+        for (int X=0; X < MAX_X; X++)
+        {
+            for (int Y=0; Y < MAX_Y; Y++)
+            {  
+                matrix[X][Y].char_value=0;
+                matrix[X][Y].intensity=0;
+            }
+        }
+        init_drips();
+    }
+
+    static inline  void fade_n_change_matrix(void)
+    {
+        for (int X=0; X < MAX_X; X++)
+        {
+            for (int Y=0; Y < MAX_Y; Y++)
+            {
+                //Randomly change characters
+                if (rand01() < PROB_CHANGE || matrix[X][Y].char_value == 0)
+                {
+                    matrix[X][Y].char_value = RANDOM_PRINTABLE_CHARACTER;
+                }
+                //Randomly dim the cells
+                if(rand01() < PROB_DIM)
+                {
+                    if (matrix[X][Y].intensity > 0)
+                    {
+                        matrix[X][Y].intensity--;
+                    }    
+                }            
+            }
+        }    
+    }
+
+    static inline void matrix_update()
+    {
+        if (rand01() < PROB_DRIP_SPAWN)
+        {
+            try_add_drips();
+        }
+        update_drips();
+        fade_n_change_matrix();
+    }
+
+#endif
+
+static inline void exit_gracefully(int sig)
+{
+    cleanup_ui();
+    fprintf(stdout, "[-] Received " MAGENTA("SIGINT\n"));
+    fprintf(stdout, "[-] " RED("Exiting") "\n");
 }
