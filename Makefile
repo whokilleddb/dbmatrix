@@ -1,14 +1,17 @@
-CC=gcc
-CFLAGS=-g -Wall -Werror -O3 
-OBJS=src/main.o src/matrix.o src/ui.o 
+# Compiler : GCC 
+CC = gcc
 
-all: main
+CFLAGS = -lncurses -Wall -Werror -g -O3 -lm 
 
-main: $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $^ -lncurses
+# Build DIR 
+DIR = src
+# Build Target Executable
+TARGET = dbmatrix
 
-%.o: %.c
-	$(CC) $(CFLAGS) -c $^ -o $@
+all: $(TARGET)
+
+$(TARGET): $(DIR)/$(TARGET).c
+	$(CC)  $(DIR)/$(TARGET).c $(CFLAGS) -o $(TARGET)
 
 clean:
-	rm -rf src/*.o src/main
+	$(RM) $(TARGET)
