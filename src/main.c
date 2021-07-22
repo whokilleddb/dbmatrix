@@ -9,9 +9,9 @@
 
 int main(int argc,char *argv[])
 {
-    signal(SIGINT, exit_gracefully);
-    setup_global();
-    show_info();
+    signal(SIGINT, exit_gracefully); //capture SIGNINT
+    setup_global(); //setup global variables
+    show_info(); //show globals
 
     //Initialize Curses
     if(!init_ui())

@@ -59,7 +59,7 @@ static inline void play_animation();
 static inline void fill_color();
 static inline void setup_global();
 static inline void set_colors();
-static inline bool init_ui(void);
+static inline bool init_ui();
 static inline void show_matrix(void);
 static inline void try_add_drips();
 static inline  void update_drips();
@@ -146,40 +146,42 @@ static inline void setup_global()
 {
     fill_color(); //fill color map
     get_dimensions(); //get dynamic struct
-    
 }
 
-static inline void set_colors()
-{
-    for(int i=0; i<8;i++)
-    {
-        init_pair(i+1,i,COLOR_BLACK);
-    }
-    //set shades of Green
-    for(int i=0; i<=5;i++)
-    {
-        init_color(i,0,i*200,0);
-    }
-    init_color(6, 800,1000,800);
-    return;
-}
+
 
 #ifndef _UI_H_
 #define _UI_H_
 
-    static inline bool init_ui(void)
+    static inline void set_colors()
     {
-        uiwindow = initscr();
-        if (uiwindow == NULL) return false;
+        for(int i=0; i<8;i++)
+        {
+            init_pair(i+1,i,COLOR_BLACK);
+        }
+        //set shades of Green
+        for(int i=0; i<=5;i++)
+        {
+            init_color(i,0,i*200,0);
+        }
+        init_color(6, 800,900,800);
+        return;
+    }
 
-        start_color();
+    static inline bool init_ui()
+    {
+        uiwindow = initscr(); //initialize the ncurses data structures
+        if (uiwindow == NULL) return false; //check if window was successfully initialized
+
+        start_color(); // enable use of colors and before any color manipulation function is called
+        wbkgd(stdscr, COLOR_PAIR(1));
         if (!has_colors() || !can_change_color() || COLOR_PAIRS < 6)
         {
             perror("[-] " RED("Your Terminal Cannot Run This Program!\n"));
             return false;
         }
 
-        set_colors();
+        set_colors(); //set custom colors
         return true;
     }
 
@@ -198,7 +200,7 @@ static inline void set_colors()
             for (int Y=0; Y < MAX_Y; Y++)
             {
                 int intensity=matrix[X][Y].intensity;
-                color_set(color_map[intensity], NULL);
+                color_set(color_map[intensity], NULL); //sets color you want to apply to your intensity
                 mvaddch(Y, X, matrix[X][Y].char_value);
             }
         }
@@ -306,9 +308,11 @@ static inline void set_colors()
 
 #endif
 
-static inline void exit_gracefully(int sig)
+//Handle SIGINT interrupt signal
+static inline void exit_gracefully(int sig) 
 {
-    cleanup_ui();
+    cleanup_ui(); //clean User interface
+
     fprintf(stdout, "[-] Received " MAGENTA("SIGINT\n"));
     fprintf(stdout, "[-] " RED("Exiting") "\n");
 }
