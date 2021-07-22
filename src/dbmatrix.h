@@ -7,7 +7,8 @@
 #include <math.h>
 #include <unistd.h>
 #include <string.h>
-#include  <signal.h>
+#include <signal.h>
+#include <ctype.h>
 
 // Colors
 #define RED(string)     "\x1b[31m" string "\x1b[0m"
@@ -18,13 +19,13 @@
 #define CYAN(string)    "\x1b[36m" string "\x1b[0m"
 
 //Macros
-#define ITERATIONS 200         //controls for how long the program will run(Infinietly if <=0)
+#define ITERATIONS 200        //controls for how long the program will run(Infinietly if <=0)
 #define REFRESH_DELAY 50000L  //controls speed 
-#define MAX_INTENSITY 13     
-#define MIN_INTENSITY 2
-#define BRIGHTNESS 6
+#define MAX_INTENSITY 13      //drip length     
+#define MIN_INTENSITY 5
+#define BRIGHTNESS 8
 #define PROB_DRIP_SPAWN 0.65
-#define PROB_DIM 0.55
+#define PROB_DIM 0.20
 #define PROB_CHANGE 0.80
 #define RANDOM_PRINTABLE_CHARACTER (33 + (rand()%80))
 #define DRIP_NUM 2500
@@ -50,6 +51,8 @@ int MAX_X; //No of Columns
 int MAX_Y; //No of Rows
 cell **matrix;
 drip drips[DRIP_NUM];
+int counter=0;
+char rickroll[]="We're no strangers to love You know the rules and so do I A full commitment's what I'm thinking of You wouldn't get this from any other guy I just wanna tell you how I'm feeling Gotta make you understand Never gonna give you up Never gonna let you down Never gonna run around and desert you Never gonna make you cry Never gonna say goodbye Never gonna tell a lie and hurt you We've known each other for so long Your heart's been aching but you're too shy to say it Inside we both know what's been going on We know the game and we're gonna play it And if you ask me how I'm feeling Don't tell me you're too blind to see Never gonna give you up Never gonna let you down Never gonna run around and desert you Never gonna make you cry Never gonna say goodbye Never gonna tell a lie and hurt you Never gonna give you up Never gonna let you down Never gonna run around and desert you Never gonna make you cry Never gonna say goodbye Never gonna tell a lie and hurt you Never gonna give, never gonna give (Give you up) We've known each other for so long Your heart's been aching but you're too shy to say it Inside we both know what's been going on We know the game and we're gonna play it I just wanna tell you how I'm feeling Gotta make you understand Never gonna give you up Never gonna let you down Never gonna run around and desert you Never gonna make you cry Never gonna say goodbye Never gonna tell a lie and hurt you Never gonna give you up Never gonna let you down Never gonna run around and desert you Never gonna make you cry Never gonna say goodbye Never gonna tell a lie and hurt you Never gonna give you up Never gonna let you down Never gonna run around and desert you Never gonna make you cry Never gonna say goodbye";
 
 //Prototypes
 static inline double rand01();
@@ -70,6 +73,21 @@ static inline void matrix_update();
 static inline void exit_gracefully(int);
 
 //Functions
+static inline int ngyup()
+{
+	if (counter==strlen(rickroll))
+	{
+		counter=0;
+	}
+	if (isprint(rickroll[counter])==0)
+	{
+		counter++;
+		return (int)rickroll[counter+1];
+	}
+	counter++;
+	return (int)rickroll[counter];
+}
+
 static inline double rand01()
 {
     return (double)rand() /(double)RAND_MAX;
@@ -148,8 +166,6 @@ static inline void setup_global()
     get_dimensions(); //get dynamic struct
 }
 
-
-
 #ifndef _UI_H_
 #define _UI_H_
 
@@ -204,7 +220,7 @@ static inline void setup_global()
                 mvaddch(Y, X, matrix[X][Y].char_value);
             }
         }
-    refresh();
+        refresh();
     }
 
 #endif
@@ -282,7 +298,7 @@ static inline void setup_global()
                 //Randomly change characters
                 if (rand01() < PROB_CHANGE || matrix[X][Y].char_value == 0)
                 {
-                    matrix[X][Y].char_value = RANDOM_PRINTABLE_CHARACTER;
+                    matrix[X][Y].char_value = ngyup();
                 }
                 //Randomly dim the cells
                 if(rand01() < PROB_DIM)
