@@ -35,6 +35,7 @@ int main(int argc,char *argv[])
             play_animation();
         }
     }
+    freepointer();
     cleanup_ui();
     return EXIT_SUCCESS;
 }

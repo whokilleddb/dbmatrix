@@ -73,6 +73,15 @@ static inline void matrix_update();
 static inline void exit_gracefully(int);
 
 //Functions
+static inline void freepointer()
+{
+    for(int i=0;i<MAX_X;i++)
+    {
+        free(matrix[i]);
+    }
+    free(matrix);
+}
+
 static inline int ngyup()
 {
 	if (counter==strlen(rickroll))
@@ -327,6 +336,7 @@ static inline void setup_global()
 //Handle SIGINT interrupt signal
 static inline void exit_gracefully(int sig) 
 {
+    freepointer(); //freepointer
     cleanup_ui(); //clean User interface
 
     fprintf(stdout, "[-] Received " MAGENTA("SIGINT\n"));
