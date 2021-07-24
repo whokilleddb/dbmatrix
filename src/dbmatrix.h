@@ -99,7 +99,7 @@ static inline int ngyup()
 
 static inline double rand01()
 {
-    return (double)rand() /(double)RAND_MAX;
+    return (double)(rand()/RAND_MAX);
 }
 
 static inline void get_dimensions()
